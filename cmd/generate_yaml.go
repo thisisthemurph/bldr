@@ -11,6 +11,11 @@ import (
 	"strings"
 )
 
+type snippet struct {
+	Data []byte
+	Path string
+}
+
 var generateFromYamlCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate the builder pattern for structs as detailed in your bldr.yml file",
@@ -25,6 +30,8 @@ var generateFromYamlCmd = &cobra.Command{
 			return err
 		}
 
+		snippets := make([]snippet, 0, len(cfg.Structs))
+
 		for _, s := range cfg.Structs {
 			structDetail, err := parser.ParseStruct(s.Path, s.Name)
 			if err != nil {
@@ -37,8 +44,15 @@ var generateFromYamlCmd = &cobra.Command{
 				return err
 			}
 
+			snippets = append(snippets, snippet{
+				Data: []byte(code),
+				Path: s.Go.Output,
+			})
 			fmt.Println(code)
-			os.WriteFile(s.Go.Output, []byte(code), 0644)
+		}
+
+		for _, code := range snippets {
+			_ = os.WriteFile(code.Path, code.Data, 0644)
 		}
 
 		return nil
