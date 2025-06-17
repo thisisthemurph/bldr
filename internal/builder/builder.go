@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Generate(structDetail *parser.StructDetail, structImport, packageName string) (string, error) {
+func Generate(structDetail *parser.StructDetail, packageName string) (string, error) {
 	var buf bytes.Buffer
 
 	isSamePackage := packageName == structDetail.PackageName
@@ -23,7 +23,7 @@ func Generate(structDetail *parser.StructDetail, structImport, packageName strin
 	_, _ = fmt.Fprintf(&buf, "// Generated %s.\n\n", time.Now().Format(time.RFC850))
 	_, _ = fmt.Fprintf(&buf, "package %s\n\n", packageName)
 	if !isSamePackage {
-		_, _ = fmt.Fprintf(&buf, "import %q\n\n", structImport)
+		_, _ = fmt.Fprintf(&buf, "import %q\n\n", structDetail.Import)
 	}
 	_, _ = fmt.Fprintf(&buf, "type %s struct {\n\tmodel %s\n}\n\n", builderName, structName)
 	_, _ = fmt.Fprintf(&buf, "func New%s() *%s {\n\treturn &%s{}\n}\n\n", builderName, builderName, builderName)

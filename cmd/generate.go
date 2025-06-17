@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/thisisthemurph/bldr/internal/builder"
 	"github.com/thisisthemurph/bldr/internal/config"
@@ -33,13 +32,12 @@ var generateFromYamlCmd = &cobra.Command{
 		snippets := make([]snippet, 0, len(cfg.Structs))
 
 		for _, s := range cfg.Structs {
-			structDetail, err := parser.ParseStruct(s.Path, s.Name)
+			structDetail, err := parser.ParseStruct(module, s.Path, s.Name)
 			if err != nil {
 				return err
 			}
 
-			structImport := fmt.Sprintf("%s/%s", module, structDetail.PackageDir)
-			code, err := builder.Generate(structDetail, structImport, s.Go.Package)
+			code, err := builder.Generate(structDetail, s.Go.Package)
 			if err != nil {
 				return err
 			}
@@ -48,11 +46,14 @@ var generateFromYamlCmd = &cobra.Command{
 				Data: []byte(code),
 				Path: s.Go.Output,
 			})
-			fmt.Println(code)
 		}
 
+		cmd.Println("Generating code:")
 		for _, code := range snippets {
-			_ = os.WriteFile(code.Path, code.Data, 0644)
+			if err := os.WriteFile(code.Path, code.Data, 0644); err != nil {
+				return err
+			}
+			cmd.Printf("  ✅ %s generated successfully\n", code.Path)
 		}
 
 		return nil

@@ -7,7 +7,6 @@ import (
 	"github.com/thisisthemurph/bldr/internal/config"
 	"github.com/thisisthemurph/bldr/internal/parser"
 	"os"
-	"path/filepath"
 )
 
 var structInfo config.StructInfo
@@ -21,20 +20,20 @@ var generateSingleCmd = &cobra.Command{
 			return err
 		}
 
-		structImport := fmt.Sprintf("%s/%s", module, filepath.Dir(structInfo.Path))
-
-		structDetail, err := parser.ParseStruct(structInfo.Path, structInfo.Name)
+		structDetail, err := parser.ParseStruct(module, structInfo.Path, structInfo.Name)
 		if err != nil {
 			return err
 		}
 
-		code, err := builder.Generate(structDetail, structImport, structInfo.Go.Package)
+		code, err := builder.Generate(structDetail, structInfo.Go.Package)
 		if err != nil {
 			return err
 		}
 
 		fmt.Println(code)
-		os.WriteFile(structInfo.Go.Output, []byte(code), 0644)
+		if err := os.WriteFile(structInfo.Go.Output, []byte(code), 0644); err != nil {
+			return err
+		}
 		return nil
 	},
 }
@@ -45,8 +44,14 @@ func init() {
 	generateSingleCmd.Flags().StringVarP(&structInfo.Go.Package, "package", "p", "", "Name of the output package")
 	generateSingleCmd.Flags().StringVarP(&structInfo.Go.Output, "out", "o", "", "Path to output file")
 
-	generateSingleCmd.MarkFlagRequired("file")
-	generateSingleCmd.MarkFlagRequired("struct")
-	generateSingleCmd.MarkFlagRequired("package")
-	generateSingleCmd.MarkFlagRequired("out")
+	panicif(generateSingleCmd.MarkFlagRequired("file"))
+	panicif(generateSingleCmd.MarkFlagRequired("struct"))
+	panicif(generateSingleCmd.MarkFlagRequired("package"))
+	panicif(generateSingleCmd.MarkFlagRequired("out"))
+}
+
+func panicif(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

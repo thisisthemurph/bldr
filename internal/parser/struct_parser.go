@@ -18,10 +18,11 @@ type StructDetail struct {
 	Name        string
 	PackageName string
 	PackageDir  string
+	Import      string
 	Fields      []Field
 }
 
-func ParseStruct(filePath, structName string) (*StructDetail, error) {
+func ParseStruct(goModule, filePath, structName string) (*StructDetail, error) {
 	src, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -64,6 +65,7 @@ func ParseStruct(filePath, structName string) (*StructDetail, error) {
 				Name:        structName,
 				PackageName: f.Name.Name,
 				PackageDir:  filepath.Dir(filePath),
+				Import:      fmt.Sprintf("%s/%s", goModule, filepath.Dir(filePath)),
 				Fields:      fields,
 			}, nil
 		}
